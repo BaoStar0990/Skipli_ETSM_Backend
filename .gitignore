@@ -1,0 +1,6 @@
+node_modules/
+.env
+dist/
+.vscode
+firebaseKey.json
+package-lock.json
