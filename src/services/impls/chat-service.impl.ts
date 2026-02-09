@@ -1,0 +1,60 @@
+import ChatMessageDto from '~/dtos/chat-message.dto'
+import IChatService from '../interfaces/chat-service.interface'
+import { plainToInstance } from 'class-transformer'
+import ChatMessage from '~/entities/message.entity'
+import chatRepositoryImpl from '~/repositories/impls/chat.repository.impl'
+import ObjectModerator from '~/utils/object-moderator.util'
+import Chat from '~/entities/chat.entity'
+import UuidGenerator from '~/utils/uuid-generator.util'
+import messageRepositoryImpl from '~/repositories/impls/chat-message.repository.impl'
+import { Request } from 'express'
+import ChatResponseDto from '~/dtos/chat-response.dto'
+import UserCreateDto from '~/dtos/user-create.dto'
+import userRepositoryImpl from '~/repositories/impls/user.repository.impl'
+
+class ChatService implements IChatService {
+  async getUserChats(userId: string): Promise<ChatResponseDto[]> {
+    const chats = await chatRepositoryImpl.findByUserId(userId)
+    const chatDtos: ChatResponseDto[] = await Promise.all(
+      chats.map(async (chat) => {
+        const dto = plainToInstance(ChatResponseDto, chat, { excludeExtraneousValues: true })
+        const peerUserId = chat.firstUserId === userId ? chat.secondUserId : chat.firstUserId
+        const peerUser = await userRepositoryImpl.findById(peerUserId)
+        dto.peerUser = plainToInstance(UserCreateDto, peerUser, { excludeExtraneousValues: true })
+        return dto
+      })
+    )
+    return chatDtos
+  }
+  async sendMessage(req: Request, messageDto: ChatMessageDto): Promise<void> {
+    const message = plainToInstance(ChatMessage, messageDto, { excludeExtraneousValues: true })
+    message.setId(UuidGenerator.generate())
+    message.setCreatedAt(Date.now())
+    message.setUpdatedAt(Date.now())
+    message.isSeen = false
+
+    const roomId = ObjectModerator.generateSocketRoomId(messageDto.senderId, messageDto.receiverId)
+
+    let chat = await chatRepositoryImpl.findById(roomId)
+    if (!chat) {
+      chat = new Chat()
+      chat.setId(UuidGenerator.generate())
+      chat.setCreatedAt(Date.now())
+      chat.setUpdatedAt(Date.now())
+      chat.lastMessage = message.content
+      chat.firstUserId = messageDto.senderId
+      chat.secondUserId = messageDto.receiverId
+      await chatRepositoryImpl.create(chat)
+    }
+    chat.setUpdatedAt(Date.now())
+    chat.lastMessage = message.content
+    await chatRepositoryImpl.update(chat.getId(), chat)
+
+    await messageRepositoryImpl.create(message)
+
+    const io = req.app.locals.io
+    io.to(roomId).emit('send-message', message)
+  }
+}
+
+export default new ChatService()

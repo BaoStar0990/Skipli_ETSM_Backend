@@ -4,6 +4,7 @@ import userRoute from './user.route'
 import taskRouter from './task.route'
 import authMiddleware from '~/middlewares/auth.middleware'
 import scheduleRouter from './schedule.route'
+import chatRouter from './chat.route'
 
 const appRouter = Router()
 
@@ -11,5 +12,6 @@ appRouter.use('/auth', authRouter)
 appRouter.use('/employees', userRoute)
 appRouter.use('/tasks', authMiddleware, taskRouter)
 appRouter.use('/schedules', authMiddleware, scheduleRouter)
+appRouter.use('/chats', authMiddleware, chatRouter)
 
 export default appRouter
