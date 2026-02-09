@@ -3,10 +3,18 @@ import { ApiResponse } from '~/dtos/api-response.dto'
 import UserCreateDto from '~/dtos/user-create.dto'
 import UsernameLoginDto from '~/dtos/username-login.dto'
 import WorkScheduleDto from '~/dtos/work-schedule.dto'
+import taskServiceImpl from '~/services/impls/task-service.impl'
 import userServiceImpl from '~/services/impls/user-service.impl'
 import workScheduleService from '~/services/impls/work-schedule-service.impl'
 
 class UserController {
+  async getEmployeeTasks(req: Request, res: Response) {
+    const { id } = req.params
+    const tasks = await taskServiceImpl.getEmployeeTasks(id as string)
+    res
+      .status(200)
+      .json(ApiResponse.builder().setCode(200).setMessage('Employee tasks fetched successfully').setData(tasks).build())
+  }
   async getWorkSchedules(req: Request, res: Response) {
     const schedules = await workScheduleService.getWorkSchedules()
     res

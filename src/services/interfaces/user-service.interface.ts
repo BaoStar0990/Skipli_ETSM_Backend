@@ -1,3 +1,4 @@
+import TaskDto from '~/dtos/task.dto'
 import UserCreateDto from '~/dtos/user-create.dto'
 import UsernameLoginDto from '~/dtos/username-login.dto'
 

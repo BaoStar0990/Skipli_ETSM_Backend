@@ -14,8 +14,12 @@ class WorkDayRepository implements IWorkDayRepository {
   update(id: string, entity: WorkDay): Promise<void> {
     throw new Error('Method not implemented.')
   }
-  delete(id: string): Promise<void> {
-    throw new Error('Method not implemented.')
+  async delete(id: string): Promise<void> {
+    const query = await db.collection('work_days').where('id', '==', id).get()
+    if (!query.empty) {
+      const docId = query.docs[0].id
+      await db.collection('work_days').doc(docId).delete()
+    }
   }
   findAll(options: { page: number; size: number }): Promise<WorkDay[]> {
     throw new Error('Method not implemented.')

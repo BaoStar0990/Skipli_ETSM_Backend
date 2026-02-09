@@ -9,13 +9,23 @@ class WorkScheduleRepository implements IWorkScheduleRepository {
     await db.collection('work_schedules').add(ObjectModerator.removeUndefined(entity.toJson()))
   }
   async findById(id: string): Promise<WorkSchedule | null> {
-    throw new Error('Method not implemented.')
+    const query = await db.collection('work_schedules').where('id', '==', id).get()
+    if (query.empty) {
+      return null
+    }
+    const doc = query.docs[0]
+    return plainToInstance(WorkSchedule, doc.data())
   }
   async update(id: string, entity: WorkSchedule): Promise<void> {
     throw new Error('Method not implemented.')
   }
   async delete(id: string): Promise<void> {
-    throw new Error('Method not implemented.')
+    const query = await db.collection('work_schedules').where('id', '==', id).get()
+    if (query.empty) {
+      throw new Error('Work schedule not found')
+    }
+    const doc = query.docs[0].ref
+    await doc.delete()
   }
   async findAll(options: { page: number; size: number }): Promise<WorkSchedule[]> {
     const snapshot = await db.collection('work_schedules').get()

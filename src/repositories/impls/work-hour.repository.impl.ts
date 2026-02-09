@@ -15,7 +15,12 @@ class WorkHourRepository implements IWorkHourRepository {
     throw new Error('Method not implemented.')
   }
   async delete(id: string): Promise<void> {
-    throw new Error('Method not implemented.')
+    const query = await db.collection('work_hours').where('id', '==', id).get()
+    if (query.empty) {
+      throw new Error('Work hour not found')
+    }
+    const doc = query.docs[0].ref
+    await doc.delete()
   }
   async findAll(options: { page: number; size: number }): Promise<WorkHour[]> {
     throw new Error('Method not implemented.')

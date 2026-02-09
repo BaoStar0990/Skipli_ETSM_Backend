@@ -16,8 +16,14 @@ import UserCreateDto from '~/dtos/user-create.dto'
 import { NotFoundException } from '~/exceptions/not-found.exception'
 import { ForbiddenException } from '~/exceptions/forbidden.exception'
 import UsernameLoginDto from '~/dtos/username-login.dto'
+import { Request, Response } from 'express'
+import { BadRequestException } from '~/exceptions/bad-request.exception'
 
 class AuthService implements IAuthService {
+  logout(res: Response): void {
+    res.clearCookie('access_token')
+    res.clearCookie('refresh_token')
+  }
   async loginUsername(body: UsernameLoginDto): Promise<AccessTokenDto> {
     const user = await userRepository.findByUsername(body.username)
     if (!user) {
@@ -77,9 +83,9 @@ class AuthService implements IAuthService {
     if (!query) {
       throw new NotFoundException('Invalid phone number')
     } else if (query.otp !== body.otp) {
-      throw new NotFoundException('Invalid OTP code')
+      throw new BadRequestException('Invalid OTP code')
     } else if (query.expiredAt <= Date.now()) {
-      throw new ForbiddenException('OTP code has expired')
+      throw new BadRequestException('OTP code has expired')
     } else {
       query.otp = ''
       await OtpRepository.update(query.getId(), query)
@@ -106,12 +112,22 @@ class AuthService implements IAuthService {
     let query: Otp | null = null
 
     switch (otpMethod) {
-      case OTPMethod.SMS:
+      case OTPMethod.SMS: {
+        const user = await userRepository.findByPhoneNumber(value)
+        if (!user) {
+          throw new BadRequestException('User with this phone number not found')
+        }
         query = await OtpRepository.findByPhoneNumber(value)
         break
-      case OTPMethod.EMAIL:
+      }
+      case OTPMethod.EMAIL: {
+        const user = await userRepository.findByEmail(value)
+        if (!user) {
+          throw new NotFoundException('User with this email not found')
+        }
         query = await OtpRepository.findByEmail(value)
         break
+      }
     }
     if (!query) {
       smsOtp.setId(UuidGenerator.generate())
@@ -150,26 +166,26 @@ class AuthService implements IAuthService {
           await sgMail.send({
             to: value,
             from: process.env.SENDGRID_SENDER_EMAIL || '',
-            subject: 'Welcome to the Company',
+            subject: 'Email Login OTP Code',
             text: `This is your ETSM OTP code: ${otp}`,
             html: `This is your ETSM OTP code: <strong>${otp}</strong>`
           })
         } catch (error) {
-          console.error('Error sending welcome email:', error)
+          console.error('Error sending email OTP:', error)
           throw new Error('Failed to send access code')
         }
         break
       case OTPMethod.SMS:
-        try {
-          await twilioClient.messages.create({
-            body: `This is your ETSM OTP code: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: value
-          })
-        } catch (error) {
-          console.error('Error sending SMS:', error)
-          throw new Error('Failed to send access code')
-        }
+        // try {
+        //   await twilioClient.messages.create({
+        //     body: `This is your ETSM OTP code: ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: value
+        //   })
+        // } catch (error) {
+        //   console.error('Error sending SMS:', error)
+        //   throw new Error('Failed to send access code')
+        // }
         break
     }
   }

@@ -9,6 +9,7 @@ import UserRole from '~/constants/user-role.enum'
 import { NotFoundException } from '~/exceptions/not-found.exception'
 import UsernameLoginDto from '~/dtos/username-login.dto'
 import SecurityUtil from '~/utils/security.util'
+import TaskDto from '~/dtos/task.dto'
 
 class UserService implements IUserService {
   async confirmAccount(id: string, body: UsernameLoginDto): Promise<void> {

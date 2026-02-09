@@ -8,9 +8,26 @@ import EmailCodeValidationDto from '~/dtos/email-code-validation.dto'
 import UsernameLoginDto from '~/dtos/username-login.dto'
 
 class AuthController {
+  async logout(req: Request, res: Response) {
+    authService.logout(res)
+    res.status(200).json(ApiResponse.builder().setCode(200).setMessage('Logout successfully').build())
+  }
   async loginUsername(req: Request, res: Response) {
     const body: UsernameLoginDto = req.body
     const result = await authService.loginUsername(body)
+    res.cookie('access_token', result.accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    })
+
+    res.cookie('refresh_token', result.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
     res.status(200).json(ApiResponse.builder().setCode(200).setData(result).setMessage('Login successfully').build())
   }
   async refreshToken(req: Request, res: Response) {
@@ -76,8 +93,8 @@ class AuthController {
     })
 
     res
-      .status(201)
-      .json(ApiResponse.builder().setCode(201).setData(result).setMessage('Valid code successfully').build())
+      .status(200)
+      .json(ApiResponse.builder().setCode(200).setData(result).setMessage('Valid code successfully').build())
   }
   async createNewAccessCode(req: Request, res: Response) {
     const { phoneNumber } = req.body

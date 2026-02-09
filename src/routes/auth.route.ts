@@ -9,5 +9,6 @@ authRouter.post('/code-validation', authController.validateAccessCode)
 authRouter.post('/email-login', authController.loginEmail)
 authRouter.post('/email-code-validation', authController.validateEmailCode)
 authRouter.post('/refresh-token', authController.refreshToken)
+authRouter.post('/logout', authController.logout)
 
 export default authRouter

@@ -14,6 +14,21 @@ import UserCreateDto from '~/dtos/user-create.dto'
 import userRepositoryImpl from '~/repositories/impls/user.repository.impl'
 
 class WorkScheduleService implements IWorkScheduleService {
+  async deleteWorkSchedule(scheduleId: string): Promise<void> {
+    const schedules = await workScheduleRepositoryImpl.findById(scheduleId)
+    if (!schedules) {
+      throw new Error('Work schedule not found')
+    }
+    const workDays = await workDayRepositoryImpl.findByWorkScheduleId(scheduleId)
+    workDays.forEach(async (day) => {
+      const workHours = await workHourRepositoryImpl.findByWorkDayId(day.getId())
+      workHours.forEach(async (hour) => {
+        await workHourRepositoryImpl.delete(hour.getId())
+      })
+      await workDayRepositoryImpl.delete(day.getId())
+    })
+    await workScheduleRepositoryImpl.delete(scheduleId)
+  }
   async getWorkSchedules(): Promise<WorkScheduleDto[]> {
     const schedules = await workScheduleRepositoryImpl.findAll({ page: 1, size: 20 })
     const result = await Promise.all(

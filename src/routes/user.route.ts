@@ -16,5 +16,6 @@ userRoute.get('/:id', userController.getEmployeeById)
 userRoute.put('/:id', userController.updateEmployeeById)
 userRoute.delete('/:id', userController.deleteEmployeeById)
 userRoute.post('/:id/work-schedules', userController.createWorkSchedule)
+userRoute.get('/:id/tasks', userController.getEmployeeTasks)
 
 export default userRoute

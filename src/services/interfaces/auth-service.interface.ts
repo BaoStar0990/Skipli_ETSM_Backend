@@ -1,3 +1,4 @@
+import { Response } from 'express'
 import { OTPMethod } from '~/constants/entity-type.enum'
 import AccessTokenDto from '~/dtos/access-token.dto'
 import AccountSetupDto from '~/dtos/account-setup.dto'
@@ -12,4 +13,5 @@ export default interface IAuthService {
   validateEmailAccessCode(body: EmailCodeValidationDto): Promise<AccessTokenDto>
   refreshToken(refreshToken: string): Promise<AccessTokenDto>
   loginUsername(body: UsernameLoginDto): Promise<AccessTokenDto>
+  logout(res: Response): void
 }
