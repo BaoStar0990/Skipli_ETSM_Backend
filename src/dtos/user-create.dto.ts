@@ -18,6 +18,7 @@ export default class UserCreateDto {
 
   toJson() {
     return {
+      id: this.id,
       name: this.name,
       email: this.email,
       phoneNumber: this.phoneNumber,

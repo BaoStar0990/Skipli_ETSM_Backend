@@ -2,7 +2,7 @@ import 'dotenv/config'
 import app from './config/app.config'
 import http from 'http'
 import { Server } from 'socket.io'
-import ObjectModerator from './utils/object-moderator.util'
+import UuidGenerator from './utils/uuid-generator.util'
 
 const PORT = process.env.PORT || 3000
 
@@ -21,8 +21,10 @@ app.locals.io = io
 
 io.on('connection', (socket) => {
   socket.on('join-room', ({ userId, peerId }) => {
-    console.log(`User ${userId} connected and joining room with peer ${peerId}`)
-    socket.join(ObjectModerator.generateSocketRoomId(userId, peerId))
+    const roomId = UuidGenerator.generateSocketRoomId(userId, peerId)
+    socket.join(roomId)
+
+    socket.emit('connected', { message: `Connected to server. Joined room ${roomId} with peer ${peerId}` })
   })
 })
 

@@ -176,16 +176,16 @@ class AuthService implements IAuthService {
         }
         break
       case OTPMethod.SMS:
-        // try {
-        //   await twilioClient.messages.create({
-        //     body: `This is your ETSM OTP code: ${otp}`,
-        //     from: process.env.TWILIO_PHONE_NUMBER,
-        //     to: value
-        //   })
-        // } catch (error) {
-        //   console.error('Error sending SMS:', error)
-        //   throw new Error('Failed to send access code')
-        // }
+        try {
+          await twilioClient.messages.create({
+            body: `This is your ETSM OTP code: ${otp}`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: value
+          })
+        } catch (error) {
+          console.error('Error sending SMS:', error)
+          throw new Error('Failed to send access code')
+        }
         break
     }
   }

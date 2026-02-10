@@ -18,8 +18,10 @@ class ChatRepository implements IChatRepository {
     })
     return chats
   }
-  async create(entity: Chat): Promise<void> {
-    await db.collection('chats').add(ObjectModerator.removeUndefined(entity.toJSON()))
+  async create(entity: Chat): Promise<Chat> {
+    const docRef = await db.collection('chats').add(ObjectModerator.removeUndefined(entity.toJSON()))
+    const snapshot = await docRef.get()
+    return plainToInstance(Chat, snapshot.data())
   }
   async findById(id: string): Promise<Chat | null> {
     const query = await db.collection('chats').where('id', '==', id).get()

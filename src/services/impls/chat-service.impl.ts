@@ -11,8 +11,39 @@ import { Request } from 'express'
 import ChatResponseDto from '~/dtos/chat-response.dto'
 import UserCreateDto from '~/dtos/user-create.dto'
 import userRepositoryImpl from '~/repositories/impls/user.repository.impl'
+import ChatCreateDto from '~/dtos/chat-create.dto'
 
 class ChatService implements IChatService {
+  async getChatById(chatId: string): Promise<ChatResponseDto> {
+    const chat = await chatRepositoryImpl.findById(chatId)
+    if (!chat) {
+      throw new Error('Chat not found')
+    }
+    const chatDto = plainToInstance(ChatResponseDto, chat, { excludeExtraneousValues: true })
+    const peerUserId = chat.firstUserId === chatDto.peerUser?.id ? chat.secondUserId : chat.firstUserId
+    const peerUser = await userRepositoryImpl.findById(peerUserId)
+    chatDto.peerUser = plainToInstance(UserCreateDto, peerUser, { excludeExtraneousValues: true })
+
+    const messages = await messageRepositoryImpl.findByChatId(chatId, { page: 1, size: 20 })
+    chatDto.chatHistory = messages.map((message) =>
+      plainToInstance(ChatMessageDto, message, { excludeExtraneousValues: true })
+    )
+
+    return chatDto
+  }
+  async createChat(userID: string, body: ChatCreateDto): Promise<ChatResponseDto> {
+    const chat = plainToInstance(Chat, body, { excludeExtraneousValues: true })
+    chat.setId(UuidGenerator.generateSocketRoomId(userID, body.peerUserId))
+    chat.setCreatedAt(Date.now())
+    chat.setUpdatedAt(Date.now())
+    chat.firstUserId = userID
+    chat.secondUserId = body.peerUserId
+    const createdChat = await chatRepositoryImpl.create(chat)
+    const chatDto = plainToInstance(ChatResponseDto, createdChat, { excludeExtraneousValues: true })
+    const peerUser = await userRepositoryImpl.findById(body.peerUserId)
+    chatDto.peerUser = plainToInstance(UserCreateDto, peerUser, { excludeExtraneousValues: true })
+    return chatDto
+  }
   async getUserChats(userId: string): Promise<ChatResponseDto[]> {
     const chats = await chatRepositoryImpl.findByUserId(userId)
     const chatDtos: ChatResponseDto[] = await Promise.all(
@@ -33,27 +64,36 @@ class ChatService implements IChatService {
     message.setUpdatedAt(Date.now())
     message.isSeen = false
 
-    const roomId = ObjectModerator.generateSocketRoomId(messageDto.senderId, messageDto.receiverId)
+    const roomId = UuidGenerator.generateSocketRoomId(messageDto.senderId, messageDto.receiverId)
 
     let chat = await chatRepositoryImpl.findById(roomId)
     if (!chat) {
       chat = new Chat()
-      chat.setId(UuidGenerator.generate())
+      chat.setId(roomId)
       chat.setCreatedAt(Date.now())
       chat.setUpdatedAt(Date.now())
       chat.lastMessage = message.content
       chat.firstUserId = messageDto.senderId
       chat.secondUserId = messageDto.receiverId
       await chatRepositoryImpl.create(chat)
+    } else {
+      chat.setUpdatedAt(Date.now())
+      chat.lastMessage = message.content
+      await chatRepositoryImpl.update(chat.getId(), chat)
     }
-    chat.setUpdatedAt(Date.now())
-    chat.lastMessage = message.content
-    await chatRepositoryImpl.update(chat.getId(), chat)
 
-    await messageRepositoryImpl.create(message)
+    message.chatId = chat.getId()
+    const createdChat = await messageRepositoryImpl.create(message)
 
     const io = req.app.locals.io
-    io.to(roomId).emit('send-message', message)
+    try {
+      io.to(roomId).emit(
+        'send-message',
+        plainToInstance(ChatMessageDto, createdChat, { excludeExtraneousValues: true })
+      )
+    } catch (error) {
+      console.error('Error emitting message:', error)
+    }
   }
 }
 

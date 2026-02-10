@@ -8,4 +8,7 @@ export default class UuidGenerator {
     const max = Math.pow(10, length) - 1
     return Math.floor(min + Math.random() * (max - min + 1)).toString()
   }
+  static generateSocketRoomId(userId1: string, userId2: string): string {
+    return [userId1, userId2].sort().join('_')
+  }
 }
