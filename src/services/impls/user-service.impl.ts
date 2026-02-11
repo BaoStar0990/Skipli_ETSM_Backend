@@ -50,7 +50,7 @@ class UserService implements IUserService {
     if (!user) {
       throw new NotFoundException('Employee not found')
     }
-    return plainToInstance(UserCreateDto, user)
+    return plainToInstance(UserCreateDto, user, { excludeExtraneousValues: true })
   }
 
   async getEmployees(page: number = 1, size: number = 10): Promise<UserCreateDto[]> {

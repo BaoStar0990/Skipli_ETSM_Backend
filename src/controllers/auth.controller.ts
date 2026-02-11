@@ -55,7 +55,7 @@ class AuthController {
     })
     res
       .status(201)
-      .json(ApiResponse.builder().setCode(201).setData({ email: result }).setMessage('Valid code successfully').build())
+      .json(ApiResponse.builder().setCode(201).setData(result.user).setMessage('Valid code successfully').build())
   }
   async loginEmail(req: Request, res: Response) {
     const { email } = req.body
@@ -94,7 +94,7 @@ class AuthController {
 
     res
       .status(200)
-      .json(ApiResponse.builder().setCode(200).setData(result).setMessage('Valid code successfully').build())
+      .json(ApiResponse.builder().setCode(200).setData(result.user).setMessage('Valid code successfully').build())
   }
   async createNewAccessCode(req: Request, res: Response) {
     const { phoneNumber } = req.body

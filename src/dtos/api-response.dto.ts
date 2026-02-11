@@ -1,4 +1,5 @@
 export class ApiResponse {
+  private success: boolean = true
   private code: number = 200
   private data: any = undefined
   private message: string = 'Request successfully'
@@ -22,6 +23,7 @@ export class ApiResponse {
 
   public build() {
     return {
+      success: this.success,
       code: this.code,
       data: this.data,
       message: this.message

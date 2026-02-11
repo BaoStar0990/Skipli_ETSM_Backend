@@ -91,6 +91,7 @@ class ChatService implements IChatService {
         'send-message',
         plainToInstance(ChatMessageDto, createdChat, { excludeExtraneousValues: true })
       )
+      io.emit('update-chat', 'Chat updated with new message')
     } catch (error) {
       console.error('Error emitting message:', error)
     }

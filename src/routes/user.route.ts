@@ -8,6 +8,7 @@ const userRoute = Router()
 userRoute.post('/:id/confirmation', userController.confirmAccount)
 
 userRoute.use(authMiddleware)
+
 userRoute.post('/', userController.createEmployee)
 userRoute.get('/', userController.getEmployees)
 userRoute.get('/work-schedules', userController.getWorkSchedules)
