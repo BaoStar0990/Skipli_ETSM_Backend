@@ -28,7 +28,9 @@ class AuthController {
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
-    res.status(200).json(ApiResponse.builder().setCode(200).setData(result).setMessage('Login successfully').build())
+    res
+      .status(200)
+      .json(ApiResponse.builder().setCode(200).setData(result.user).setMessage('Login successfully').build())
   }
   async refreshToken(req: Request, res: Response) {
     const { refreshToken } = req.body

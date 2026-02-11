@@ -1,6 +1,8 @@
 # ETMS Backend
 
-Express.js + TypeScript backend for ETMS. This project uses Express, Firebase Admin, and supporting services (SendGrid, Twilio) with a layered architecture.
+This ETMS backend system is built on **_Express.js_** + **_TypeScript_**. This project uses **_Express_**, **_Firebase Admin_**, and supporting services (**_SendGrid_**, **_Twilio_**) with a layered architecture (N-tier architecture).
+
+- As ExpressJS is a minimalist framework of NodeJS for building API, this design allow developers to freely design their project structure. Therefore I have built the project on the pattern of OOP as most similar as possible
 
 ## Project Structure
 
