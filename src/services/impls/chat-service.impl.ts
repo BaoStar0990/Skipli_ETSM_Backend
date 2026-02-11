@@ -3,7 +3,6 @@ import IChatService from '../interfaces/chat-service.interface'
 import { plainToInstance } from 'class-transformer'
 import ChatMessage from '~/entities/message.entity'
 import chatRepositoryImpl from '~/repositories/impls/chat.repository.impl'
-import ObjectModerator from '~/utils/object-moderator.util'
 import Chat from '~/entities/chat.entity'
 import UuidGenerator from '~/utils/uuid-generator.util'
 import messageRepositoryImpl from '~/repositories/impls/chat-message.repository.impl'
@@ -29,6 +28,12 @@ class ChatService implements IChatService {
       plainToInstance(ChatMessageDto, message, { excludeExtraneousValues: true })
     )
 
+    const lastMessage = await messageRepositoryImpl.findLastMessageInChat(chatId)
+    if (lastMessage) {
+      lastMessage.isSeen = true
+      await messageRepositoryImpl.update(lastMessage.getId(), lastMessage)
+    }
+
     return chatDto
   }
   async createChat(userID: string, body: ChatCreateDto): Promise<ChatResponseDto> {
@@ -52,6 +57,8 @@ class ChatService implements IChatService {
         const peerUserId = chat.firstUserId === userId ? chat.secondUserId : chat.firstUserId
         const peerUser = await userRepositoryImpl.findById(peerUserId)
         dto.peerUser = plainToInstance(UserCreateDto, peerUser, { excludeExtraneousValues: true })
+        const lastMessage = await messageRepositoryImpl.findLastMessageInChat(chat.getId())
+        dto.isSeen = lastMessage && lastMessage.receiverId === userId ? lastMessage.isSeen : null
         return dto
       })
     )

@@ -3,4 +3,5 @@ import ChatMessage from '~/entities/message.entity'
 
 export default interface IChatMessageRepository extends IRepository<ChatMessage> {
   findByChatId(chatId: string, options: { page: number; size: number }): Promise<ChatMessage[]>
+  findLastMessageInChat(chatId: string): Promise<ChatMessage | null>
 }

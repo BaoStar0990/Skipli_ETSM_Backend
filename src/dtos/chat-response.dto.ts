@@ -9,6 +9,7 @@ export default class ChatResponseDto {
   lastMessage!: string
   @Expose()
   updatedAt!: Date
+  isSeen: boolean | null = null
   peerUser!: UserCreateDto
   chatHistory: ChatMessageDto[] = []
 }
